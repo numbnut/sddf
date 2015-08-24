@@ -1,0 +1,66 @@
+implicit val pipeContext = new SddfPipeContext
+
+val inputPath = "/home/niklas/projects/sddf/data/musicbrainz-unique-100000.csv.dup"
+val goldstandardPath = inputPath
+
+val Number = (0, "number")
+val Title = (1, "title")
+val Length = (2, "length")
+val Artist = (3, "artist")
+val Album = (4, "album")
+val Year = (5, "year")
+val Language = (6, "language")
+
+implicit val featureMeasures: Array[(FeatureId, Measure)] = Array(
+  (Number._1, MeasureEquality), (Title._1, MeasureWrapperToLower(JaccardMetric(2))), (Length._1, MeasureEquality), (Artist._1, MeasureWrapperToLower(JaccardMetric(2))), (Album._1, MeasureWrapperToLower(JaccardMetric(2))), (Year._1, MeasureEquality)
+)
+
+implicit val thresholds: Array[(FeatureId, Threshold)] = featureMeasures.map(pair => {
+  (pair._1, 0.8)
+})
+
+implicit val bkvBuilder = new BlockingKeyBuilderBasic(
+  (Title._1, 0 to 10), (Artist._1, 0 to 10), (Album._1, 0 to 10)
+)
+
+val featureIdNameMapping = Map(Number, Title, Length, Artist, Album, Year, Language)
+implicit val featureIdNameMapper = new FeatureIdNameMapping(featureIdNameMapping)
+
+// Parse Tuples
+val allFields: Seq[Int] = Seq(Number._1, Title._1, Length._1, Artist._1, Album._1, Year._1, Language._1)
+val allFieldsWithId: Seq[Int] = Ignore +: Id +: Ignore +: allFields
+
+val input = sc.textFile(inputPath, 8)
+
+val readerPipe = PipeReaderOmitHead() append PipeReaderTupleCsv(allFieldsWithId) append PipeStoreInContextCorpus()
+
+val rawTuples = readerPipe.run(input)
+
+val blockerSn = PipeBlockerSortedNeighbourhood()
+val blockerSa = PipeBlockerSuffixArray()
+
+val blockResSn = blockerSn.run(rawTuples)
+val blockResSa = blockerSa.run(rawTuples)
+blockResSn.cache()
+blockResSa.cache()
+
+val gsPipe = PipeReaderGoldstandardCluster() append PipeStoreInContextGoldstandard()
+gsPipe.run(input)
+
+val blockAnalysePipe = PipeAnalyseBlocker()
+blockAnalysePipe.run(blockResSn)
+val blockAnalysePipe = PipeAnalyseBlocker()
+blockAnalysePipe.run(blockResSa)
+
+val gsIntersblockResSn = pipeContext.goldstandard.intersection(blockResSn)
+
+gsIntersblockResSn.count
+
+pipeContext.goldstandard.count
+
+// val intersection = blockResSn.intersection(blockResSa)
+
+// intersection.count()
+
+// val exclusiveSn = blockResSn.subtract(blockResSa)
+// val exclusiveSa = blockResSa.subtract(blockResSn)

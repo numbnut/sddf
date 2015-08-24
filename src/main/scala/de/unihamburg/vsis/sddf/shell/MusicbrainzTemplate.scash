@@ -1,0 +1,72 @@
+//package de.unihamburg.vsis.sddf.shell
+
+import com.rockymadden.stringmetric.similarity.JaccardMetric
+import de.unihamburg.vsis.sddf.SddfContext.FeatureId
+import de.unihamburg.vsis.sddf.SddfContext.Measure
+import de.unihamburg.vsis.sddf.SddfContext.Threshold
+import de.unihamburg.vsis.sddf.indexing.blocking.keygeneration.BlockingKeyBuilderBasic
+import de.unihamburg.vsis.sddf.pipe.context.SddfPipeContext
+import de.unihamburg.vsis.sddf.reading.FeatureIdNameMapping
+import de.unihamburg.vsis.sddf.reading.FeatureIdNameMapping.Id
+import de.unihamburg.vsis.sddf.reading.FeatureIdNameMapping.Ignore
+import de.unihamburg.vsis.sddf.similarity.measures.MeasureEquality
+import de.unihamburg.vsis.sddf.similarity.measures.MeasureWrapperToLower
+import de.unihamburg.vsis.sddf.preprocessing.PipePreprocessorRemoveRegex
+import de.unihamburg.vsis.sddf.reading.corpus.PipeAnalyseCorpus
+import de.unihamburg.vsis.sddf.reading.corpus.PipeReaderTupleCsv
+import de.unihamburg.vsis.sddf.pipe.optimize.PipeOptimizePersistAndName
+import de.unihamburg.vsis.sddf.reading.corpus.PipeStoreInContextCorpus
+import de.unihamburg.vsis.sddf.reading.PipeReaderOmitHead
+import de.unihamburg.vsis.sddf.preprocessing.PipePreprocessorTrim
+
+//class ShellTemplate {
+
+implicit val pc = new SddfPipeContext
+val initialRddCount = 32
+
+val inputPath = "/home/niklas/projects/sddf/data/10_000-0.1.csv"
+val goldstandardPath = inputPath
+
+val Number = (0, "number")
+val Title = (1, "title")
+val Length = (2, "length")
+val Artist = (3, "artist")
+val Album = (4, "album")
+val Year = (5, "year")
+val Language = (6, "language")
+
+implicit val featureMeasures: Array[(FeatureId, Measure)] = Array(
+  (Number._1, MeasureEquality), (Title._1, MeasureWrapperToLower(JaccardMetric(2))), (Length._1, MeasureEquality), (Artist._1, MeasureWrapperToLower(JaccardMetric(2))), (Album._1, MeasureWrapperToLower(JaccardMetric(2))), (Year._1, MeasureEquality)
+//,(Language._1, JaccardMetric(2))
+)
+
+implicit val thresholds: Array[(FeatureId, Threshold)] = featureMeasures.map(pair => {
+  (pair._1, 0.8)
+})
+
+implicit val bkvBuilder = new BlockingKeyBuilderBasic(
+  (Title._1, 0 to 10), (Artist._1, 0 to 10), (Album._1, 0 to 10)
+)
+
+val featureIdNameMapping = Map(Number, Title, Length, Artist, Album, Year, Language)
+implicit val featureIdNameMapper = new FeatureIdNameMapping(featureIdNameMapping)
+
+// Parse Tuples
+val allFields: Seq[Int] = Seq(Number._1, Title._1, Length._1, Artist._1, Album._1, Year._1, Language._1)
+val allFieldsWithId: Seq[Int] = Ignore +: Id +: Ignore +: allFields
+
+val inputPipeline = { 
+  new PipeReaderOmitHead()
+  .append(PipeReaderTupleCsv(allFieldsWithId))
+  .append(PipePreprocessorTrim(allFields: _*))
+  .append(PipePreprocessorRemoveRegex("[^0-9]", Number._1, Year._1, Length._1))
+  .append(PipeAnalyseCorpus())
+  .append(PipeStoreInContextCorpus())
+  .append(PipeOptimizePersistAndName("corpus"))
+}
+
+val rawData = sc.textFile(inputPath)
+
+val corpus = inputPipeline.run(rawData)(pc)
+
+//}

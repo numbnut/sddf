@@ -1,0 +1,11 @@
+val indexStandard = PipeIndexerStandard(bkvBuilder).run(corpus)
+val indexSuffixArray = PipeIndexerSuffixArray().run(corpus)
+val indexSortedNeighborhood = PipeIndexerSortedNeighborhood().run(corpus)
+indexStandard.subtract(indexSuffixArray).count
+indexSuffixArray.subtract(indexStandard).count
+val blocksStandard = PipeBlockerStandard(bkvBuilder).run(corpus)
+val blocksSuffixArray = PipeBlockerSuffixArray().run(corpus)
+val blockSizeDisitributionStandard = blocksStandard.map(x => (x.size, 1)).reduceByKey(_ + _)
+blockSizeDisitributionStandard.collect.sorted.foreach(println(_))
+val blockSizeDisitributionSuffixArray = blocksSuffixArray.map(x => (x.size, 1)).reduceByKey(_ + _)
+blockSizeDisitributionSuffixArray.collect.sorted.foreach(println(_))

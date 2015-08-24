@@ -1,0 +1,53 @@
+log4j.rootLogger=info, FileAppender
+log4j.logger.de.unihamburg=info, ConsoleAppender, ResultFileAppender, ResultFileAppender2
+log4j.logger.lineage = info, LineageAppender
+log4j.logger.org.apache.spark=info, SparkFileAppender
+log4j.logger.org.apache.spark=info, SparkWarnFileAppender
+
+# ConsoleAppender is set to be a ConsoleAppender.
+log4j.appender.ConsoleAppender=org.apache.log4j.ConsoleAppender
+log4j.appender.ConsoleAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.ConsoleAppender.layout.ConversionPattern=%d{ISO8601} %6r [%4.4t] %-5p %-20.20c{1} %x - %m%n
+
+# FileAppender
+log4j.appender.FileAppender=de.unihamburg.vsis.sddf.logging.EachRunNewFileAppender
+log4j.appender.FileAppender.File=../../../log/sddf-main.log
+log4j.appender.FileAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.FileAppender.layout.ConversionPattern=%d{ISO8601} %6r [%t] %-5p %c %x - %m%n
+
+# ResultFileAppender
+log4j.appender.ResultFileAppender=de.unihamburg.vsis.sddf.logging.EachRunNewFileAppender
+log4j.appender.ResultFileAppender.File=../../../log/${run.uuid}-sddf-result.log
+log4j.appender.ResultFileAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.ResultFileAppender.layout.ConversionPattern=%d{ISO8601} %6r [%4.4t] %-5p %-20.20c{1} %x - %m%n
+
+# ResultFileAppender2
+# writes the log to the result directory
+log4j.appender.ResultFileAppender2=de.unihamburg.vsis.sddf.logging.EachRunNewFileAppender
+log4j.appender.ResultFileAppender2.File=../../../result/${run.uuid}-sddf-result.log
+log4j.appender.ResultFileAppender2.layout=org.apache.log4j.PatternLayout
+log4j.appender.ResultFileAppender2.layout.ConversionPattern=%d{ISO8601} %6r [%4.4t] %-5p %-20.20c{1} %x - %m%n
+
+# SparkFileAppender
+log4j.appender.SparkFileAppender=de.unihamburg.vsis.sddf.logging.EachRunNewFileAppender
+log4j.appender.SparkFileAppender.File=../../../log/${run.uuid}-sddf-spark.log
+log4j.appender.SparkFileAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.SparkFileAppender.layout.ConversionPattern=%d{ISO8601} %6r [%t] %-5p %c %x - %m%n
+
+# SparkWarnFileAppender
+log4j.appender.SparkWarnFileAppender=de.unihamburg.vsis.sddf.logging.EachRunNewFileAppender
+log4j.appender.SparkWarnFileAppender.File=../../../log/${run.uuid}-sddf-spark-warn.log
+log4j.appender.SparkWarnFileAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.SparkWarnFileAppender.layout.ConversionPattern=%d{ISO8601} %6r [%t] %-5p %c %x - %m%n
+
+# LineageAppender
+log4j.appender.LineageAppender=de.unihamburg.vsis.sddf.logging.EachRunNewFileAppender
+log4j.appender.LineageAppender.File=../../../log/${run.uuid}-sddf-lineage.log
+log4j.appender.LineageAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.LineageAppender.layout.ConversionPattern=%d{ISO8601} %6r [%t] %-5p %c %x - %m%n
+
+# Settings to quiet third party logs that are too verbose
+log4j.logger.org.eclipse.jetty=WARN
+log4j.logger.org.eclipse.jetty.util.component.AbstractLifeCycle=ERROR
+log4j.logger.org.apache.spark.repl.SparkIMain$exprTyper=INFO
+log4j.logger.org.apache.spark.repl.SparkILoop$SparkILoopInterpreter=INFO
