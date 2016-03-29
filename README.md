@@ -3,6 +3,7 @@ SddF is supposed to be a scalable distributed duplicate detection framework.
 Apache Spark is used as distributed computing framework.
 SddF is the result of my master's thesis in computational science.
 It is still a prototype and not supposed to be used in production.
+Detailed information can be found in my [thesis](scalable-duplicate-detection.pdf).
 
 # Getting started
 There is no binary release of SddF at the moment.
@@ -20,9 +21,6 @@ The following lines are briefly describing how to get started.
 * Run sbt eclipse
 * Open eclipse and import the example project
 * Run the example class
-
-For any further information read my thesis.
-I will include the link as soon as it is published.
 
 # License
 SddF is licensed under the GPLv3.
