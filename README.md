@@ -10,7 +10,7 @@ There is no binary release of SddF at the moment.
 Therefor you have to build it on your own.
 The following lines are briefly describing how to get started.
 
-## Prerequisits
+## Prerequisites
 The Scala Build Tool (SBT) needs to be installed.
 Look at the SBT docs to find the installation procedure for your OS.
 
